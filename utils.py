@@ -95,9 +95,13 @@ def make_width_coverage_plot(df, estimand_title, filename, theta_true, alpha = 0
     linewidth_inner = 5
     linewidth_outer = 7
     col = [sns.color_palette("pastel")[1], sns.color_palette("pastel")[2], sns.color_palette("pastel")[0]]
+    if finetuning:
+        col = [sns.color_palette("pastel")[1], sns.color_palette("pastel")[0], sns.color_palette("pastel")[2]]
     sns.set_theme(font_scale=1.5, style='white', palette=col, rc={'lines.linewidth': 3})
-    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15,3.3))
-
+    if finetuning:
+        fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(18,3.3))
+    else:
+        fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15,3.3))
     sns.lineplot(ax=axs[1],data=df[(df['$n_b$'] > n_l) & (df['$n_b$'] < n_u)], x='$n_b$', y='interval width', hue='estimator', alpha=0.8)
     sns.lineplot(ax=axs[2],data=df[(df['$n_b$'] > n_l) & (df['$n_b$'] < n_u)], x='$n_b$', y='coverage', hue='estimator', alpha=0.8, errorbar=None)
 
@@ -131,14 +135,19 @@ def make_width_coverage_plot(df, estimand_title, filename, theta_true, alpha = 0
     
     axs[2].axhline(1-alpha, color="#888888", linestyle='dashed', zorder=1, alpha=0.8)
     handles, labels = axs[2].get_legend_handles_labels()
-    if finetuning: # slighly nicer ordering in fine-tuning plots
-        handles[1:3] = handles[2], handles[1]
-        labels[1:3] = labels[2], labels[1]
-    axs[2].legend(handles=handles, labels=labels, loc='lower right')
+    if finetuning:
+        axs[2].legend(handles=handles, labels=labels, loc='lower right', bbox_to_anchor=(1.9, 0.43))
+    else:
+        axs[2].legend(handles=handles, labels=labels, loc='lower right', bbox_to_anchor=(1.6, 0.43))
     axs[2].set_ylim([0.6,1])
+    x_ticks_coverage = np.linspace(np.min(ns[ns>n_l]), np.max(ns[ns<n_u]), 5)
+    x_ticks_coverage = [int(x) for x in x_ticks_coverage]
+    axs[2].set_xticks(x_ticks_coverage)
+    axs[2].set_xlim([np.min(ns[ns>n_l]), np.max(ns[ns<n_u])])
     axs[2].grid(True)
     
     sns.despine(top=True, right=True)
+    sns.despine(left=True, ax = axs[0])
     plt.tight_layout()
     
     # save plot
@@ -146,7 +155,7 @@ def make_width_coverage_plot(df, estimand_title, filename, theta_true, alpha = 0
     plt.show()
 
 
-def make_budget_plot(df, plot_title, filename, finetuning=False):
+def make_budget_plot(df, plot_title, filename, finetuning=False, include_ylabel=True):
     ns = df["$n_b$"].unique()
     estimators = df["estimator"].unique()
     widths = np.zeros((len(estimators), len(ns)))
@@ -181,22 +190,37 @@ def make_budget_plot(df, plot_title, filename, finetuning=False):
     col = [sns.color_palette("pastel")[1]]
     sns.set_theme(font_scale=1.7, style='white', palette=col, rc={'lines.linewidth': 3})
     fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(6,6))
+
+    y_ticks = [0, 25, 50, 75, 100]
     
     axs[0].set_title(plot_title)
-    axs[0].plot(ns_large2, save2)
+    axs[0].plot(ns_large1, save1, marker="o", markersize=8, linestyle='dashed', alpha=0.8)
     axs[0].set_xlabel('$n_b$')
-    if finetuning:
-        axs[0].set_ylabel('budget save over\n no fine-tuning (%)')
-    else:
-        axs[0].set_ylabel('budget save\n over classical (%)')
+    axs[0].set_ylim([0,100])
+    axs[0].set_yticks(y_ticks)
+    if include_ylabel:
+        if finetuning:
+            axs[0].set_ylabel('budget save over\n no fine-tuning (%)')
+        else:
+            axs[0].set_ylabel('budget save\n over classical (%)')
     axs[0].get_yaxis().set_major_formatter(FormatStrFormatter('%.0f'))
     axs[0].grid(True)
 
-    axs[1].plot(ns_large1, save1)
+    axs[1].plot(ns_large2, save2, marker="o", markersize=8, linestyle='dashed', alpha=0.8)
     axs[1].set_xlabel('$n_b$')
-    axs[1].set_ylabel('budget save\n over uniform (%)')
+    axs[1].set_ylim([0,100])
+    axs[1].set_yticks(y_ticks)
+    if include_ylabel:
+        axs[1].set_ylabel('budget save\n over uniform (%)')
     axs[1].get_yaxis().set_major_formatter(FormatStrFormatter('%.0f'))
     axs[1].grid(True)
+
+    # xticks_locations = axs[1].get_xticks()
+    # xlim = axs[1].get_xlim()
+    # axs[0].set_xticks(xticks_locations)
+    # axs[0].set_xlim(xlim)
+    # axs[1].set_xticks(xticks_locations)
+    # axs[1].set_xlim(xlim)
 
     sns.despine(top=True, right=True)
     plt.tight_layout()
@@ -204,3 +228,4 @@ def make_budget_plot(df, plot_title, filename, finetuning=False):
     # save plot
     plt.savefig(filename)
     plt.show()
+    return fig, axs
