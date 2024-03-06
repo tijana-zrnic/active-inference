@@ -1,6 +1,6 @@
 # Active Statistical Inference
 
-Code accompanying the paper [*Active Statistical Inference*](https://arxiv.org/abs/todo) by Zrnic and Candès (2024).
+Code accompanying the paper [*Active Statistical Inference*](http://arxiv.org/abs/2403.03208) by Zrnic and Candès (2024).
 
 The repository contains notebooks with examples:
 - post-election research on Pew data ([```pew79-post-election-research.ipynb```](https://github.com/tijana-zrnic/active-inference/blob/main/pew79-post-election-research.ipynb))
